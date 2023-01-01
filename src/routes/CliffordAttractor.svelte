@@ -30,11 +30,14 @@
 	let x: number;
 	let y: number;
 
-	$: a, b, c, d, gradient, func, reset();
+	$: a, b, c, d, width, height, func, scale, reset();
 	$: scale = chroma.scale(gradient).mode(interpMode);
 
 	$: hist = new Uint32Array(width * height);
 	let histMax = 0;
+
+	$: {
+	}
 
 	onMount(() => {
 		let _ctx = canvas.getContext('2d');
