@@ -3,6 +3,7 @@
 	import { rand } from './random';
 	import chroma from 'chroma-js';
 	import { phi } from './const';
+	import type { funcs } from './funcs';
 
 	export let a: number;
 	export let b: number;
@@ -15,6 +16,7 @@
 	$: sizeScale = width / (2 * Math.max(1 + Math.abs(c), 1 + Math.abs(d))) / phi;
 
 	export let gradient: string[];
+	export let func: typeof funcs[0];
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
@@ -28,7 +30,7 @@
 	let x: number;
 	let y: number;
 
-	$: a, b, c, d, reset();
+	$: a, b, c, d, gradient, func, reset();
 	$: scale = chroma.scale(gradient).mode(interpMode);
 
 	$: hist = new Uint32Array(width * height);
@@ -71,10 +73,6 @@
 
 		const f = hist[idx] / histMax;
 
-		if (Math.random() < 0.00001) {
-			// console.log(hist.length, idx);
-		}
-
 		return [px, py, f];
 	}
 
@@ -108,17 +106,25 @@
 
 		for (let i = 0; i < stepsPerTick; i++) {
 			const [px, py, f] = advance();
-			ctx.fillStyle = scale(f).css();
+			ctx.fillStyle = scale(func.fn(f)).css();
 			ctx.fillRect(px, py, 1, 1);
 		}
 	}
 </script>
 
-<canvas bind:this={canvas} {width} {height} />
+<figure>
+	<canvas bind:this={canvas} {width} {height} />
+</figure>
 
 <style>
+	figure {
+		display: flex;
+		justify-content: center;
+	}
+
 	canvas {
 		width: 100%;
+		max-width: 75vh;
 		border: 1px solid var(--b-line);
 		border-radius: 0.25rem;
 	}
