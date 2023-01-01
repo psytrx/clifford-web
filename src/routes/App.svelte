@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import CliffordAttractor from './CliffordAttractor.svelte';
 	import FuncInput from './FuncInput.svelte';
 	import { funcs } from './funcs';
@@ -28,33 +29,62 @@
 	function handleOnRandomizeGradient() {
 		gradient = pickRand(palettes);
 	}
+
+	let searchHandle: any;
+	let histMax: number;
+	let iterations: number;
+	function handleOnFindStable() {
+		handleOnRandomizeParams();
+		const n = 100;
+		searchHandle = setInterval(() => {
+			if (histMax < iterations / n) {
+				clearInterval(searchHandle);
+				searchHandle = undefined;
+			} else {
+				handleOnRandomizeParams();
+			}
+		}, 100);
+	}
+
+	onMount(() => {
+		return () => {
+			clearInterval(searchHandle);
+		};
+	});
 </script>
 
-<CliffordAttractor {a} {b} {c} {d} {gradient} {func} {interpMode} />
+<CliffordAttractor {a} {b} {c} {d} {gradient} {func} {interpMode} bind:histMax bind:iterations />
 
-<ul>
-	<li><button on:click|preventDefault={handleOnRandomizeParams}>Randomize Parameters</button></li>
-	<li><button on:click|preventDefault={handleOnRandomizeGradient}>Randomize Gradient</button></li>
-</ul>
+<div>
+	<ul>
+		<li>
+			<button on:click|preventDefault={handleOnFindStable} disabled={searchHandle}>
+				Find stable attractor
+			</button>
+		</li>
+		<li><button on:click|preventDefault={handleOnRandomizeParams}>Randomize parameters</button></li>
+		<li><button on:click|preventDefault={handleOnRandomizeGradient}>Randomize gradient</button></li>
+	</ul>
 
-<details>
-	<summary>Gradient</summary>
+	<details>
+		<summary>Gradient</summary>
 
-	<GradientInput bind:value={gradient} {interpMode} />
-	<InterpModeInput bind:value={interpMode} />
-	<GradientPreview {gradient} {interpMode} fn={(x) => x} />
-	<FuncInput bind:value={func} />
-	<GradientPreview {gradient} {interpMode} fn={func.fn} />
-</details>
+		<GradientInput bind:value={gradient} {interpMode} />
+		<InterpModeInput bind:value={interpMode} />
+		<GradientPreview {gradient} {interpMode} fn={(x) => x} />
+		<FuncInput bind:value={func} />
+		<GradientPreview {gradient} {interpMode} fn={func.fn} />
+	</details>
 
-<details>
-	<summary>Parameters</summary>
+	<details>
+		<summary>Parameters</summary>
 
-	<ParameterInput name="a" bind:value={a} />
-	<ParameterInput name="b" bind:value={b} />
-	<ParameterInput name="c" bind:value={c} />
-	<ParameterInput name="d" bind:value={d} />
-</details>
+		<ParameterInput name="a" bind:value={a} />
+		<ParameterInput name="b" bind:value={b} />
+		<ParameterInput name="c" bind:value={c} />
+		<ParameterInput name="d" bind:value={d} />
+	</details>
+</div>
 
 <style>
 	ul {

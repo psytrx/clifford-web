@@ -13,7 +13,9 @@
 	export let width = 1024;
 	export let height = width;
 
-	$: sizeScale = width / (2 * Math.max(1 + Math.abs(c), 1 + Math.abs(d))) / phi;
+	export let zoom = 1;
+
+	$: sizeScale = (zoom * width) / (2 * Math.max(1 + Math.abs(c), 1 + Math.abs(d))) / phi;
 
 	export let gradient: string[];
 	export let func: typeof funcs[0];
@@ -24,20 +26,20 @@
 
 	export let targetFps = 60;
 	let stepsPerTick = 128;
+	export let iterations = 0;
 
 	export let interpMode: chroma.InterpolationMode;
 
 	let x: number;
 	let y: number;
+	export let maxX = 0;
+	export let maxY = 0;
 
-	$: a, b, c, d, width, height, func, scale, reset();
+	$: a, b, c, d, width, height, func, gradient, scale, zoom, reset();
 	$: scale = chroma.scale(gradient).mode(interpMode);
 
 	$: hist = new Uint32Array(width * height);
-	let histMax = 0;
-
-	$: {
-	}
+	export let histMax = 0;
 
 	onMount(() => {
 		let _ctx = canvas.getContext('2d');
@@ -69,10 +71,18 @@
 
 		const px = Math.floor(width / 2 + x * sizeScale);
 		const py = Math.floor(height / 2 + y * sizeScale);
+		if (px < 0 || px >= width || py < 0 || py >= height) {
+			return null;
+		}
+
 		const idx = px + width * py;
 
 		hist[idx] = (hist[idx] || 0) + 1;
-		histMax = Math.max(histMax, hist[idx]);
+		if (hist[idx] > histMax) {
+			histMax = hist[idx];
+			maxX = x;
+			maxY = y;
+		}
 
 		const f = hist[idx] / histMax;
 
@@ -93,6 +103,7 @@
 
 		hist = new Uint32Array(width * height);
 		histMax = 0;
+		iterations = 0;
 	}
 
 	function updateStepsPerTick(dt: number) {
@@ -108,26 +119,36 @@
 		updateStepsPerTick(dt);
 
 		for (let i = 0; i < stepsPerTick; i++) {
-			const [px, py, f] = advance();
+			const ok = advance();
+			if (!ok) continue;
+
+			if (Math.random() < 0.0001) {
+				// console.log(ok);
+			}
+
+			const [px, py, f] = ok;
 			ctx.fillStyle = scale(func.fn(f)).css();
 			ctx.fillRect(px, py, 1, 1);
 		}
+		iterations = iterations + stepsPerTick;
 	}
 </script>
 
 <figure>
 	<canvas bind:this={canvas} {width} {height} />
+	<!-- <figcaption>{maxX}/{maxY}</figcaption> -->
 </figure>
 
 <style>
 	figure {
 		display: flex;
+		flex-direction: column;
 		justify-content: center;
 	}
 
 	canvas {
 		width: 100%;
-		max-width: 75vh;
+		max-width: 100vw;
 		border: 1px solid var(--b-line);
 		border-radius: 0.25rem;
 	}
