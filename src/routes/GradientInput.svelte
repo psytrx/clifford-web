@@ -55,4 +55,8 @@
 	li.grow {
 		width: 100%;
 	}
+
+	input {
+		padding: 0;
+	}
 </style>

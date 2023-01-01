@@ -37,28 +37,24 @@
 	<li><button on:click|preventDefault={handleOnRandomizeGradient}>Randomize Gradient</button></li>
 </ul>
 
-<form>
-	<fieldset>
-		<h2>Gradient</h2>
+<details>
+	<summary>Gradient</summary>
 
-		<GradientInput bind:value={gradient} {interpMode} />
-		<InterpModeInput bind:value={interpMode} />
-		<GradientPreview {gradient} {interpMode} fn={(x) => x} />
-		<FuncInput bind:value={func} />
-		<GradientPreview {gradient} {interpMode} fn={func.fn} />
-	</fieldset>
+	<GradientInput bind:value={gradient} {interpMode} />
+	<InterpModeInput bind:value={interpMode} />
+	<GradientPreview {gradient} {interpMode} fn={(x) => x} />
+	<FuncInput bind:value={func} />
+	<GradientPreview {gradient} {interpMode} fn={func.fn} />
+</details>
 
-	<fieldset>
-		<h2>Parameters</h2>
+<details>
+	<summary>Parameters</summary>
 
-		<ParameterInput name="a" bind:value={a} />
-		<ParameterInput name="b" bind:value={b} />
-		<ParameterInput name="c" bind:value={c} />
-		<ParameterInput name="d" bind:value={d} />
-
-		<button on:click|preventDefault={handleOnRandomizeParams}>Randomize</button>
-	</fieldset>
-</form>
+	<ParameterInput name="a" bind:value={a} />
+	<ParameterInput name="b" bind:value={b} />
+	<ParameterInput name="c" bind:value={c} />
+	<ParameterInput name="d" bind:value={d} />
+</details>
 
 <style>
 	ul {
