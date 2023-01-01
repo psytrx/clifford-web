@@ -10,6 +10,9 @@
 	import ParameterInput from './ParameterInput.svelte';
 	import { pickRand, rand } from './random';
 
+	const width = 1024;
+	const height = width;
+
 	let a = rand(-2, 2);
 	let b = rand(-2, 2);
 	let c = rand(-2, 2);
@@ -18,6 +21,21 @@
 	let gradient = pickRand(palettes);
 	let interpMode: chroma.InterpolationMode = 'lab';
 	let func = funcs[0];
+
+	let maxX = 0;
+	let maxY = 0;
+
+	$: consoleArgs =
+		'clifford-go \\\n  ' +
+		[
+			`--width=${width}`,
+			`--height=${height}`,
+			`--a=${a}`,
+			`--b=${b}`,
+			`--c=${c}`,
+			`--d=${d}`,
+			`--gradient=${gradient.join(',')}`
+		].join(' \\\n  ');
 
 	function handleOnRandomizeParams() {
 		a = rand(-2, 2);
@@ -35,7 +53,7 @@
 	let iterations: number;
 	function handleOnFindStable() {
 		handleOnRandomizeParams();
-		const n = 100;
+		const n = 250;
 		searchHandle = setInterval(() => {
 			if (histMax < iterations / n) {
 				clearInterval(searchHandle);
@@ -53,7 +71,39 @@
 	});
 </script>
 
-<CliffordAttractor {a} {b} {c} {d} {gradient} {func} {interpMode} bind:histMax bind:iterations />
+<div class="layered">
+	<CliffordAttractor
+		{width}
+		{height}
+		{a}
+		{b}
+		{c}
+		{d}
+		{gradient}
+		{func}
+		{interpMode}
+		bind:maxX
+		bind:maxY
+		bind:histMax
+		bind:iterations
+	/>
+	<div class="highlight">
+		<CliffordAttractor
+			width={width / 4}
+			height={height / 4}
+			{a}
+			{b}
+			{c}
+			{d}
+			{gradient}
+			{func}
+			{interpMode}
+			zoom={128}
+			offX={maxX}
+			offY={maxY}
+		/>
+	</div>
+</div>
 
 <div>
 	<ul>
@@ -84,6 +134,11 @@
 		<ParameterInput name="c" bind:value={c} />
 		<ParameterInput name="d" bind:value={d} />
 	</details>
+
+	<details>
+		<summary>clifford-go Arguments</summary>
+		<pre><code>$ {consoleArgs}</code></pre>
+	</details>
 </div>
 
 <style>
@@ -92,5 +147,16 @@
 		list-style: none;
 		display: flex;
 		gap: 0.25rem;
+	}
+
+	.layered {
+		position: relative;
+	}
+
+	.highlight {
+		position: absolute;
+		right: -1rem;
+		bottom: -1rem;
+		box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
 	}
 </style>

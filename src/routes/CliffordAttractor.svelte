@@ -14,6 +14,8 @@
 	export let height = width;
 
 	export let zoom = 1;
+	export let offX = 0;
+	export let offY = 0;
 
 	$: sizeScale = (zoom * width) / (2 * Math.max(1 + Math.abs(c), 1 + Math.abs(d))) / phi;
 
@@ -35,7 +37,7 @@
 	export let maxX = 0;
 	export let maxY = 0;
 
-	$: a, b, c, d, width, height, func, gradient, scale, zoom, reset();
+	$: a, b, c, d, width, height, zoom, offX, offY, gradient, func, interpMode, scale, reset();
 	$: scale = chroma.scale(gradient).mode(interpMode);
 
 	$: hist = new Uint32Array(width * height);
@@ -69,8 +71,8 @@
 		x = nx;
 		y = ny;
 
-		const px = Math.floor(width / 2 + x * sizeScale);
-		const py = Math.floor(height / 2 + y * sizeScale);
+		const px = Math.floor(width / 2 + (x - offX) * sizeScale);
+		const py = Math.floor(height / 2 + (y - offY) * sizeScale);
 		if (px < 0 || px >= width || py < 0 || py >= height) {
 			return null;
 		}
@@ -80,8 +82,12 @@
 		hist[idx] = (hist[idx] || 0) + 1;
 		if (hist[idx] > histMax) {
 			histMax = hist[idx];
-			maxX = x;
-			maxY = y;
+
+			const threshold = 0.01;
+			if ((iterations < 1e6 && Math.abs(x - maxX) > threshold) || Math.abs(y - maxY) > threshold) {
+				maxX = x;
+				maxY = y;
+			}
 		}
 
 		const f = hist[idx] / histMax;
@@ -120,7 +126,10 @@
 
 		for (let i = 0; i < stepsPerTick; i++) {
 			const ok = advance();
-			if (!ok) continue;
+			if (!ok) {
+				i -= 0.5;
+				continue;
+			}
 
 			if (Math.random() < 0.0001) {
 				// console.log(ok);
@@ -141,6 +150,7 @@
 
 <style>
 	figure {
+		margin: 0;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
